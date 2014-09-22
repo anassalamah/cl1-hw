@@ -37,8 +37,10 @@ class BigramLanguageModel:
         self._tokenizer = tokenize_function
         self._normalizer = normalize_function
         
-        # Add your code here!
-
+	self._dictionary = defaultdict(int)
+	self._wordProbDict = defaultdict(int)
+	self._contextProbDict = defaultdict(int)
+    
     def train_seen(self, word, count=1):
         """
         Tells the language model that a word has been seen @count times.  This
@@ -46,9 +48,8 @@ class BigramLanguageModel:
         """
         assert not self._vocab_final, \
             "Trying to add new words to finalized vocab"
-
-        # Add your code here!            
-
+	self._dictionary[word] += count
+	
     def tokenize(self, sent):
         """
         Returns a generator over tokens in the sentence.  
@@ -66,8 +67,10 @@ class BigramLanguageModel:
         """
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
-
-        return -1
+	if self._dictionary[word] < self._unk_cutoff:
+		return "<UNK>"
+	elif self._dictionary[word] >= self._unk_cutoff:
+		return word
 
     def finalize(self):
         """
