@@ -1,3 +1,5 @@
+# Author: Anas Salamah
+# Date: Sept 26th, 2014
 from math import log, exp
 from collections import defaultdict
 from string import lower
@@ -16,6 +18,7 @@ kNEG_INF = -1e6
 
 kSTART = "<s>"
 kEND = "</s>"
+kUNK = "<UNK>"
 
 def lg(x):
     return log(x) / log(2.0)
@@ -36,11 +39,11 @@ class BigramLanguageModel:
 
         self._tokenizer = tokenize_function
         self._normalizer = normalize_function
-        
+	
 	self._dictionary = defaultdict(int)
-	self._wordProbDict = defaultdict(int)
-	self._contextProbDict = defaultdict(int)
-    
+	self._bigram = defaultdict(int)
+	self._unigram = defaultdict(int)
+	self._recursing = False
     def train_seen(self, word, count=1):
         """
         Tells the language model that a word has been seen @count times.  This
@@ -48,8 +51,9 @@ class BigramLanguageModel:
         """
         assert not self._vocab_final, \
             "Trying to add new words to finalized vocab"
+
 	self._dictionary[word] += count
-	
+
     def tokenize(self, sent):
         """
         Returns a generator over tokens in the sentence.  
@@ -67,10 +71,14 @@ class BigramLanguageModel:
         """
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
-	if self._dictionary[word] < self._unk_cutoff:
-		return "<UNK>"
-	elif self._dictionary[word] >= self._unk_cutoff:
+
+	if word == kSTART or word == kEND:
 		return word
+	else:
+		if self._dictionary[word] < self._unk_cutoff:
+			return kUNK
+		else:
+			return word
 
     def finalize(self):
         """
@@ -103,16 +111,36 @@ class BigramLanguageModel:
         Return the log MLE estimate of a word given a context.  If the
         MLE would be negative infinity, use kNEG_INF
         """
+	if self._bigram.has_key(context+word):
+		if self._unigram.has_key(context):
+			mle = float(self._bigram[context+word]) / (self._unigram[context])
+		else:
+			mle = 1
+		return lg(mle)
 
-        return 0.0
+	else:
+		mle = kNEG_INF
+		return mle
+        
 
     def laplace(self, context, word):
         """
         Return the log MLE estimate of a word given a context.
         """
-
-        return 0.0
-
+        V = 0.0
+	for i,n in self._unigram.items():
+		V += n
+	if self._bigram.has_key(context+word):
+		if self._unigram.has_key(context):
+			laplace = float(self._bigram[context+word] + 1) / (self._unigram[context] + V)
+		else:
+			laplace = float(self._bigram[context+word] + 1) / (1 + V)
+	else:
+		if self._unigram.has_key(context):
+			laplace = float(1) / (self._unigram[context] + V)
+		else:
+			laplace = float(1) / (1 + V)
+	return lg(laplace)
     def good_turing(self, context, word):
         """
         Return the Good Turing probability of a word given a context
@@ -125,37 +153,106 @@ class BigramLanguageModel:
         given a context; interpolates context probability with the
         overall corpus probability.
         """
-        return 0.0
-
+	V = 0.0
+	for i,n in self._unigram.items():
+		V += n
+	if self._bigram.has_key(context+word):
+		pwC = float(self._unigram[word] + 1) / len(self._unigram)
+	else:
+		pwC = 0
+	if self._bigram.has_key(context+word):
+		pw = float(self._bigram[context+word] + 1) / (V)
+	else:
+		pw = float(1) / (V)
+	jm = self._jm_lambda * pwC + (1.0 - self._jm_lambda) * pw
+	jm = lg(jm)
+	return jm
     def kneser_ney(self, context, word):
         """
         Return the log probability of a word given a context given
         Kneser Ney backoff
         """
-        return 0.0
+	""" V number of Values in context restaurant"""
+	V = 0.0
+	Cuni = 0.0
+	for i,n in self._unigram.items():
+		V += n
+	for t,v in self._unigram.items():
+		Cuni += v
+	"""    kn = knL + knR( CknL + CknR*1/V) """
+	""" or kn = knL + knR
+	*** so kn = knL + knR(kn * 1/V)
+	"""
+	if not self._recursing:
+		if self._bigram.has_key(context+word):
+			if self._unigram.has_key(context):
+				knL = float(self._bigram[context+word] - self._kn_discount) / (self._kn_concentration + self._unigram[context])
+				"fix that one to count of something dynamic"
+				knR = float(self._kn_concentration + (1 * self._kn_discount)) / (self._kn_concentration + self._unigram[context])
+			else:
+				knL = float(self._bigram[context+word] -  self._kn_discount) / (1 + self._kn_concentration)
+				knR = float(self._kn_concentration + (1 * self._kn_discount)) / (1 + self._kn_concentration)
+		else:
+			knL = 0.0
+			if self._unigram.has_key(context):
+				 knR = float(self._kn_concentration + (1 * self._kn_discount)) / (self._kn_concentration + self._unigram[context])
+			else:
+				knR = float(self._kn_concentration + (1 * self._kn_discount)) / (1 + self._kn_concentration)
+	else:
+		if self._bigram.has_key(context+word):
+			knL = float(self._bigram[context+word] + 1 - self._kn_discount) / (Cuni + self._kn_concentration)
+			knR = float(self._kn_concentration + len(self._unigram) * self._kn_discount) / (Cuni + self._kn_concentration)
+		else:
+			knL = float(1 - self._kn_discount) / (Cuni + self._kn_concentration)
+			knR = float(self._kn_concentration + len(self._unigram) * self._kn_discount) / (Cuni + self._kn_concentration)
+	if self._recursing:
+		interkn = knR * 1/V
+		kn = knL + interkn
+	else:
+		self._recursing = True
+		interkn = knR * self.kneser_ney(context,word)
+		self._recursing = False
+		kn = knL + interkn
+		kn = lg(kn)
+	return kn
 
     def dirichlet(self, context, word):
         """
         Additive smoothing, assuming independent Dirichlets with fixed
         hyperparameter.
         """
-        return 0.0
+        V = 0.0
+	for i,n in self._unigram.items():
+		V += n
+	if self._bigram.has_key(context+word):
+		if self._unigram.has_key(context):
+			dirichlet = float(self._bigram[context+word] + self._dirichlet_alpha) / (self._unigram[context] + (self._dirichlet_alpha * V))
+		else:
+			dirichlet = float(self._bigram[context+word] + self._dirichlet_alpha) / (1 + (self._dirichlet_alpha * V))
+	else:
+		if self._unigram.has_key(context):
+			dirichlet = float(self._dirichlet_alpha) / (self._unigram[context] + (self._dirichlet_alpha * V))
+		else:
+			dirichlet = float(self._dirichlet_alpha) / (1 + (self._dirichlet_alpha * V))
+	return lg(dirichlet)
 
     def add_train(self, sentence):
         """
         Add the counts associated with a sentence.
         """
 
-        # You'll need to complete this function, but here's a line of code that
-        # will hopefully get you started.
         for context, word in bigrams(self.tokenize_and_censor(sentence)):
-            None
+		if self._bigram.has_key(context+word):
+			self._bigram[context+word] += 1
+		else:
+			self._unigram[word] += 1
+			self._bigram[context+word] += 1
 
     def perplexity(self, sentence, method):
+	"""
+	Compute the perplexity of a sentence given a estimation method
         """
-        Compute the perplexity of a sentence given a estimation method
-        """
-        return 2.0 ** (-1.0 * mean([method(context, word) for context, word in \
+	return 2.0 ** (-1.0 * mean([method(context, word) for context, word in \
                                     bigrams(self.tokenize_and_censor(sentence))]))
 
     def sample(self, samples=25):

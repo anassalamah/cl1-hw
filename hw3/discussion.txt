@@ -1,0 +1,32 @@
+# Author: Anas Salamah
+# Date: Sept 26th, 2014
+The main benefit out of the Exploration phase was to see how the different estimations are in action. In other words, what they think is a good English sentence. I ran a set of example sentences on each of the estimation schemas and here are some examples I ran:
+
+Sentence	MLE	Laplace	Dirichlet	KN	JM	Lowest
+UNK	9.5	1811.6	192.4	.46	17.2	KN
+I like UNK	10.1	3550.6	372.3	1.9	35.6	KN
+I like UNK.	2.0	467.04	50.4	0.54	17.8	KN
+Home	Inf	168302.1	58892.9	5738.9	13652.1	KN
+Home.	0.7	1360.4	156.4	0.58	20.6	KN
+God	9.6	66520	9243.6	3.8	118.5	KN
+I like god	Inf	22213.9	4653.3	139.4	671.4	KN
+God is good	22.8	43269.4	5381.3	14.3	77.4	KN
+And god	51.1	15864.5	2154.9	6.47	40.48	KN
+
+The table above shows us that the estimations get better from from left to right, except for JM. 
+
+JM and MLE are the most realistic estimations after KN. In fact, JM is better in my opinion because it puts out a high perplexity for words that are uncommon versus “inf” that MLE puts out. MLE also is extreme and either assigns a sentence a low perplexity(good) or inf. MLE’s highest perplexity is 51.1 out of the examples I had.
+
+Laplace and Dirichlet both try to smooth MLE but Dirichlet is the only schema that actually does an OK job at it.. On the other hand, I think Laplace is the extremist of smoothing approaches which is visible here with the high numbers of perplexity given by it.
+
+KN is the most accurate of the whole. You can see how the numbers make sense when evaluating a sentence as a correct form of English. The highest perplexity for the examples I had was “home” and it is due to the word not existing in the training set.
+
+In addition, the training set needs more data because the perplexity for UNK is very low across all the estimations(except for Laplace since it’s an extreme smoothing approach). This is hinting that the probability of a word being unknown is very high.
+
+I did notice that any sentence in any of the estimation schemas would have a much lower perplexity if it is ending with a dot. This makes sense since all English sentences usually end with a dot.
+
+
+
+Overall, this assignment gave me a better understanding of language modeling and creating a language model that will represent language in an intelligent way that will automate the process of natural language processing. These probabilistic methods are much more efficient at producing a language model when comparing with a rule based processing approach that is lacking because of the manual work needed to routinely update the rules
+
+

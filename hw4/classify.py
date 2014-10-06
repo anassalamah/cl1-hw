@@ -1,11 +1,18 @@
+# Author: Anas Salamah
+# Date: Oct 3, 2014
+
 from collections import defaultdict
 from csv import DictReader, DictWriter
+import re
+
 
 import nltk
-from nltk.corpus import wordnet as wn
-from nltk.tokenize import TreebankWordTokenizer
+from nltk.corpus import wordnet as wn, stopwords as sw
+from nltk.tokenize import TreebankWordTokenizer, RegexpTokenizer
 
-kTOKENIZER = TreebankWordTokenizer()
+
+wTOKENIZER = RegexpTokenizer(r'\w+')
+
 
 def morphy_stem(word):
     """
@@ -19,16 +26,26 @@ def morphy_stem(word):
 
 class FeatureExtractor:
     def __init__(self):
-        """
-        You may want to add code here
-        """
-        
         None
-    
+    			
     def features(self, text):
         d = defaultdict(int)
-        for ii in kTOKENIZER.tokenize(text):
+        for ii in wTOKENIZER.tokenize(text):
             d[morphy_stem(ii)] += 1
+            #for cc in sw.words():
+        	#if morphy_stem(ii) == cc:
+        	    #d["StopW"] += 1
+	    if ii[-2:] == 'ed':
+            	d["PV"] += 1
+            elif ii[-3:] == 'ing':
+            	d["PresV"] += 1
+            elif ii[-2:] == 'ly':
+            	d["ADV"] += 1
+            
+            if ii[0].isupper():
+            	d["PV"] += 1
+        	
+        d["DOCLEN"] = len(list(wTOKENIZER.tokenize(text)))
         return d
 
 if __name__ == "__main__":

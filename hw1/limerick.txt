@@ -1,0 +1,9 @@
+# Author: Anas Salamah
+# Date: DATE SUBMITTED
+
+# Limerick for Extra credit
+t = """I'm taking NLP to learn about,
+the skills to process natural language all-out
+as NL data is all around us
+and processing it is a plus
+and that's why NLP is the future without a doubt"""
