@@ -72,6 +72,7 @@ class BigramLanguageModel:
         assert self._vocab_final, \
             "Vocab must be finalized before looking up words"
 
+<<<<<<< HEAD
 	if word == kSTART or word == kEND:
 		return word
 	else:
@@ -79,12 +80,18 @@ class BigramLanguageModel:
 			return kUNK
 		else:
 			return word
+=======
+        # Add your code here
+        return -1
+>>>>>>> upstream/master
 
     def finalize(self):
         """
         Fixes the vocabulary as static, prevents keeping additional vocab from
         being added
         """
+
+        # You probably do not need to modify this code
         self._vocab_final = True
 
     def tokenize_and_censor(self, sentence):
@@ -92,6 +99,8 @@ class BigramLanguageModel:
         Given a sentence, yields a sentence suitable for training or
         testing.  Prefix the sentence with <s>, replace words not in
         the vocabulary with <UNK>, and end the sentence with </s>.
+
+        You should not modify this code.
         """
         yield self.vocab_lookup(kSTART)
         for ii in self._tokenizer(sentence):
@@ -102,6 +111,8 @@ class BigramLanguageModel:
     def normalize(self, word):
         """
         Normalize a word
+
+        You should not modify this code.
         """
         return self._normalizer(word)
 
@@ -111,6 +122,7 @@ class BigramLanguageModel:
         Return the log MLE estimate of a word given a context.  If the
         MLE would be negative infinity, use kNEG_INF
         """
+<<<<<<< HEAD
 	if self._bigram.has_key(context+word):
 		if self._unigram.has_key(context):
 			mle = float(self._bigram[context+word]) / (self._unigram[context])
@@ -122,11 +134,18 @@ class BigramLanguageModel:
 		mle = kNEG_INF
 		return mle
         
+=======
+
+        # This initially return 0.0, ignoring the word and context.
+        # Modify this code to return the correct value.
+        return 0.0
+>>>>>>> upstream/master
 
     def laplace(self, context, word):
         """
         Return the log MLE estimate of a word given a context.
         """
+<<<<<<< HEAD
         V = 0.0
 	for i,n in self._unigram.items():
 		V += n
@@ -141,10 +160,19 @@ class BigramLanguageModel:
 		else:
 			laplace = float(1) / (1 + V)
 	return lg(laplace)
+=======
+
+        # This initially return 0.0, ignoring the word and context.
+        # Modify this code to return the correct value.
+        return 0.0
+
+>>>>>>> upstream/master
     def good_turing(self, context, word):
         """
         Return the Good Turing probability of a word given a context
         """
+        # This initially return 0.0, ignoring the word and context.
+        # Modify this code to return the correct value.
         return 0.0
 
     def jelinek_mercer(self, context, word):
@@ -153,6 +181,7 @@ class BigramLanguageModel:
         given a context; interpolates context probability with the
         overall corpus probability.
         """
+<<<<<<< HEAD
 	V = 0.0
 	for i,n in self._unigram.items():
 		V += n
@@ -167,11 +196,18 @@ class BigramLanguageModel:
 	jm = self._jm_lambda * pwC + (1.0 - self._jm_lambda) * pw
 	jm = lg(jm)
 	return jm
+=======
+        # This initially return 0.0, ignoring the word and context.
+        # Modify this code to return the correct value.
+        return 0.0
+
+>>>>>>> upstream/master
     def kneser_ney(self, context, word):
         """
         Return the log probability of a word given a context given
         Kneser Ney backoff
         """
+<<<<<<< HEAD
 	""" V number of Values in context restaurant"""
 	V = 0.0
 	Cuni = 0.0
@@ -215,12 +251,18 @@ class BigramLanguageModel:
 		kn = knL + interkn
 		kn = lg(kn)
 	return kn
+=======
+        # This initially return 0.0, ignoring the word and context.
+        # Modify this code to return the correct value.
+        return 0.0
+>>>>>>> upstream/master
 
     def dirichlet(self, context, word):
         """
         Additive smoothing, assuming independent Dirichlets with fixed
         hyperparameter.
         """
+<<<<<<< HEAD
         V = 0.0
 	for i,n in self._unigram.items():
 		V += n
@@ -235,12 +277,22 @@ class BigramLanguageModel:
 		else:
 			dirichlet = float(self._dirichlet_alpha) / (1 + (self._dirichlet_alpha * V))
 	return lg(dirichlet)
+=======
+        # This initially return 0.0, ignoring the word and context.
+        # Modify this code to return the correct value.
+        return 0.0
+>>>>>>> upstream/master
 
     def add_train(self, sentence):
         """
         Add the counts associated with a sentence.
         """
 
+<<<<<<< HEAD
+=======
+        # You'll need to complete this function, but here's a line of
+        # code that will hopefully get you started.
+>>>>>>> upstream/master
         for context, word in bigrams(self.tokenize_and_censor(sentence)):
 		if self._bigram.has_key(context+word):
 			self._bigram[context+word] += 1
@@ -252,18 +304,33 @@ class BigramLanguageModel:
 	"""
 	Compute the perplexity of a sentence given a estimation method
         """
+<<<<<<< HEAD
 	return 2.0 ** (-1.0 * mean([method(context, word) for context, word in \
+=======
+        Compute the perplexity of a sentence given a estimation method
+
+        You do not need to modify this code.
+        """
+        return 2.0 ** (-1.0 * mean([method(context, word) for context, word in \
+>>>>>>> upstream/master
                                     bigrams(self.tokenize_and_censor(sentence))]))
 
-    def sample(self, samples=25):
+    def sample(self, method, samples=25):
         """
         Sample words from the language model.
         
         @arg samples The number of samples to return.
         """
-        yield ""
+        # Modify this code to get extra credit.  This should be
+        # written as an iterator.  I.e. yield @samples times followed
+        # by a final return, as in the sample code.
+
+        for ii in xrange(samples):
+            yield ""
         return
 
+# You do not need to modify the below code, but you may want to during
+# your "exploration" of high / low probability sentences.
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--jm_lambda", help="Parameter that controls " + \
