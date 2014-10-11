@@ -28,7 +28,7 @@ def main():
     tenTag = defaultdict(int)
     for word in d:
         oneTag[word] += 1
-        '''if len(d[word]) == 1:
+        if len(d[word]) == 1:
             oneTag[word] += 1
         elif len(d[word]) == 2:
             twoTag[word] += 1
@@ -47,8 +47,8 @@ def main():
         elif len(d[word]) == 9:
             nineTag[word] += 1
         elif len(d[word]) == 10:
-            tenTag[word] += 1'''
-    print len(oneTag)
+            tenTag[word] += 1
+
     '''
     find word with maximum number of tags
     '''
