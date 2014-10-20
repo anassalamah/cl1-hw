@@ -120,8 +120,13 @@ class EisnerParser:
         """
         Create a chart with singleton spans
         """
-        # Complete this!
-        return None
+        for i in xrange(len(self._sent)):
+        	self._chart[(i,i,False,False)] = 0.0
+        	self._chart[(i,i,False,True)] = 0.0
+        	self._chart[(i,i,True,False)] = 0.0
+        	self._chart[(i,i,True,True)] = 0.0
+        	
+        return self._chart
 
     def get_score(self, start, stop, right_dir, complete):
         return self._chart[(start, stop, right_dir, complete)]
@@ -145,9 +150,14 @@ class EisnerParser:
         """
         Complete the chart and fill in back pointers
         """
+        for i in xrange(len(self._sent)-1):
+		self._chart[(i,i+1, True, True)] = self._sf.__call__(self._sent[i],self._sent[i+1], self._tags[i],self._tags[i+1], i, i+1)
+		self._chart[(i,i+1, True, False)] = self._sf.__call__(self._sent[i],self._sent[i+1], self._tags[i],self._tags[i+1], i, i+1)
+		self._chart[(i,i+1, False, True)] = self._sf.__call__(self._sent[i+1],self._sent[i], self._tags[i+1],self._tags[i], i+1, i)
+		self._chart[(i,i+1, False, False)] = self._sf.__call__(self._sent[i+1],self._sent[i], self._tags[i+1],self._tags[i], i+1, i)
 
-        # Complete this!
-
+			
+        return self._chart
 def custom_sf():
     """
     Return a custom score function that obeys the BigramScoreFunction interface.
