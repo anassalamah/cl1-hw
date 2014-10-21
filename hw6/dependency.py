@@ -108,7 +108,7 @@ class EisnerParser:
     """
     Parses a sentence using Eisner's algorithm
     """
-
+    
     def __init__(self, sentence, tag_sequence, score_function):
         self._chart = defaultdict(float)
         self._pointer = defaultdict(float)
@@ -116,7 +116,11 @@ class EisnerParser:
         self._tags = [kROOT] + tag_sequence
         self._sf = score_function
         self.initialize_chart()
-
+	self._maxtt = kNEG_INF
+	self._maxtf = kNEG_INF
+	self._maxft = kNEG_INF
+	self._maxff = kNEG_INF
+	
     def initialize_chart(self):
         """
         Create a chart with singleton spans
@@ -126,8 +130,7 @@ class EisnerParser:
         	self._chart[(i,i,False,True)] = 0.0
         	self._chart[(i,i,True,False)] = 0.0
         	self._chart[(i,i,True,True)] = 0.0
-        	
-        return self._chart
+
 
     def get_score(self, start, stop, right_dir, complete):
         return self._chart[(start, stop, right_dir, complete)]
@@ -151,32 +154,41 @@ class EisnerParser:
         """
         Complete the chart and fill in back pointers
         """
+        
         for span_length in xrange(1,len(self._sent)):
         	for ss in xrange(len(self._sent)-span_length):
 			tt = ss + span_length
-			max = kNEG_INF
+			maxff = kNEG_INF
+        		maxtf = kNEG_INF
+        		maxft = kNEG_INF
+        		maxtt = kNEG_INF
 			for qq in xrange(ss,tt):
-				self._chart[(ss,tt,True,False)] = self._chart[(ss,qq,True,True)] + self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[ss],self._sent[tt])
-				if qq > max:
-					max = qq
-				self._pointer[(ss,tt,True,False)] = max
-				self._chart[(ss,tt,False,False)] = self._chart[(ss,qq, True, True)]+ self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[tt],self._sent[ss])
-				if qq > max:
-					max = qq
-				self._pointer[(ss,tt,False,False)] = max
-				self._chart[(ss,tt,False,True)] = self._chart[(ss, qq, False, True)] + self._chart[(qq,tt, False, False)]
-				if qq > max:
-					max = qq
-				self._pointer[(ss,tt,False,True)] = max
+				val = self._chart[(ss,qq,True,True)] + self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[ss], self._sent[tt])
+				if val > maxtf:
+					maxtf = val
+					self._chart[(ss,tt,True,False)] = val
+					self._pointer[(ss,tt,True,False)] = qq
+
+				val = self._chart[(ss,qq, True, True)]+ self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[tt], self._sent[ss])
+				if val > maxff:
+				 	 maxff = val
+					 self._chart[(ss,tt,False,False)] = val
+					 self._pointer[(ss,tt,False,False)] = qq
+					 
+				 
+			
+				val = self._chart[(ss, qq, False, True)] + self._chart[(qq,tt, False, False)]
+				if val > maxft:
+					maxft = val
+					self._chart[(ss,tt,False,True)] = val
+					self._pointer[(ss,tt,False,True)] = qq
 			for qq in xrange(tt,ss,-1):
-				self._chart[(ss,tt,True,True)] = self._chart[(ss,qq,True,False)] + self._chart[(qq,tt, True, True)]
-				if qq > max:
-					max = qq
-				self._pointer[(ss,tt,True,True)] = max
-					
-		for i in self._chart:
-			print i, self._chart[i], self._pointer[i]
-        #return self._chart
+				val = self._chart[(ss,qq,True,False)] + self._chart[(qq,tt, True, True)]
+				if val > maxtt:
+					maxtt = val
+					self._chart[(ss,tt,True,True)] = val
+					self._pointer[(ss,tt,True,True)] = qq
+
 def custom_sf():
     """
     Return a custom score function that obeys the BigramScoreFunction interface.
