@@ -1,6 +1,7 @@
 from string import punctuation
 from math import log
 import pickle
+from collections import defaultdict
 
 from numpy import logaddexp
 from scipy.stats import poisson
@@ -109,8 +110,8 @@ class EisnerParser:
     """
 
     def __init__(self, sentence, tag_sequence, score_function):
-        self._chart = {}
-        self._pointer = {}
+        self._chart = defaultdict(float)
+        self._pointer = defaultdict(float)
         self._sent = [kROOT] + sentence
         self._tags = [kROOT] + tag_sequence
         self._sf = score_function
@@ -150,14 +151,32 @@ class EisnerParser:
         """
         Complete the chart and fill in back pointers
         """
-        for i in xrange(len(self._sent)-1):
-		self._chart[(i,i+1, True, True)] = self._sf.__call__(self._sent[i],self._sent[i+1], self._tags[i],self._tags[i+1], i, i+1)
-		self._chart[(i,i+1, True, False)] = self._sf.__call__(self._sent[i],self._sent[i+1], self._tags[i],self._tags[i+1], i, i+1)
-		self._chart[(i,i+1, False, True)] = self._sf.__call__(self._sent[i+1],self._sent[i], self._tags[i+1],self._tags[i], i+1, i)
-		self._chart[(i,i+1, False, False)] = self._sf.__call__(self._sent[i+1],self._sent[i], self._tags[i+1],self._tags[i], i+1, i)
-
-			
-        return self._chart
+        for span_length in xrange(1,len(self._sent)):
+        	for ss in xrange(len(self._sent)-span_length):
+			tt = ss + span_length
+			max = kNEG_INF
+			for qq in xrange(ss,tt):
+				self._chart[(ss,tt,True,False)] = self._chart[(ss,qq,True,True)] + self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[ss],self._sent[tt])
+				if qq > max:
+					max = qq
+				self._pointer[(ss,tt,True,False)] = max
+				self._chart[(ss,tt,False,False)] = self._chart[(ss,qq, True, True)]+ self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[tt],self._sent[ss])
+				if qq > max:
+					max = qq
+				self._pointer[(ss,tt,False,False)] = max
+				self._chart[(ss,tt,False,True)] = self._chart[(ss, qq, False, True)] + self._chart[(qq,tt, False, False)]
+				if qq > max:
+					max = qq
+				self._pointer[(ss,tt,False,True)] = max
+			for qq in xrange(tt,ss,-1):
+				self._chart[(ss,tt,True,True)] = self._chart[(ss,qq,True,False)] + self._chart[(qq,tt, True, True)]
+				if qq > max:
+					max = qq
+				self._pointer[(ss,tt,True,True)] = max
+					
+		for i in self._chart:
+			print i, self._chart[i], self._pointer[i]
+        #return self._chart
 def custom_sf():
     """
     Return a custom score function that obeys the BigramScoreFunction interface.
