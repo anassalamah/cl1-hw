@@ -1,3 +1,6 @@
+# Author: Anas Salamah
+# Date: Oct 21, 2014
+
 import sys
 
 import nltk
@@ -39,7 +42,6 @@ def transition_sequence(sentence):
         		sentence.nodelist[ii]['deps'].remove(kk)
         		yield Transition('l', (ii, ii-1))
         		""" shift after left transition if ii[deps] has value less than it's """
-        		#if all(i > sentence.nodelist[ii]['address'] for i in sentence.nodelist[ii]['deps']):
         		if sentence.nodelist[ii]['address'] == sentence.nodelist[0]['deps'][0] or sentence.nodelist[ii]['head'] > sentence.nodelist[ii]['address'] or  sentence.nodelist[ii]['head'] == sentence.nodelist[sentence.nodelist[0]['deps'][0]]['address']:
                             yield Transition('s')
         	

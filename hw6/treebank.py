@@ -1,3 +1,6 @@
+# Author: Anas Salamah
+# Date: Oct 21, 2014
+
 import nltk
 from collections import defaultdict
 from nltk import grammar

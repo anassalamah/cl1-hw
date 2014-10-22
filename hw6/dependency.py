@@ -1,3 +1,6 @@
+# Author: Anas Salamah
+# Date: Oct 21, 2014
+
 from string import punctuation
 from math import log
 import pickle
@@ -146,15 +149,26 @@ class EisnerParser:
         """
         Return an iterater over edges in a cell in the parse chart
         """
-
-        # Complete this!
-        return
+	result = set()
+       	""" add span1 of depth 1 """
+       	result.add((span[0],self._pointer[span])) 
+       	""" add span1/span1 of depth 2 """
+       	result.add((self._pointer[span],self._chart[(span[0],self._pointer[span], False, True)]))
+       	""" add span1/span2 of depth 2 """
+       	result.add((self._chart[(span[0],self._pointer[span], False, True)],self._chart[(span[0], self._chart[(span[0],self._pointer[span], False, True)], False, True)]))
+       	""" add span2/span1 of depth 2 """
+       	result.add((self._pointer[span],self._pointer[(self._pointer[span], span[1], True, True)]))
+       	""" add span2/span2 of depth 2 """
+       	result.add((self._pointer[(self._pointer[span], span[1], True, True)], span[1]))
+       	""" add last span """
+       	result.add((span[1], self._pointer[(self._pointer[span], span[1], False, True)]))
+    	
+        return result
 
     def fill_chart(self):
         """
         Complete the chart and fill in back pointers
         """
-        
         for span_length in xrange(1,len(self._sent)):
         	for ss in xrange(len(self._sent)-span_length):
 			tt = ss + span_length
@@ -163,25 +177,24 @@ class EisnerParser:
         		maxft = kNEG_INF
         		maxtt = kNEG_INF
 			for qq in xrange(ss,tt):
+				val = self._chart[(ss,qq, True, True)] + self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[tt], self._sent[ss])
+				if val > maxff:
+					maxff = val
+					self._chart[(ss,tt,False,False)] = val
+					self._pointer[(ss,tt,False,False)] = qq
+			for qq in xrange(ss,tt):	
 				val = self._chart[(ss,qq,True,True)] + self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[ss], self._sent[tt])
 				if val > maxtf:
 					maxtf = val
 					self._chart[(ss,tt,True,False)] = val
 					self._pointer[(ss,tt,True,False)] = qq
-
-				val = self._chart[(ss,qq, True, True)]+ self._chart[(qq+1,tt, False, True)] + self._sf.word_score(self._sent[tt], self._sent[ss])
-				if val > maxff:
-				 	 maxff = val
-					 self._chart[(ss,tt,False,False)] = val
-					 self._pointer[(ss,tt,False,False)] = qq
-					 
-				 
-			
+			for qq in xrange(ss,tt):
 				val = self._chart[(ss, qq, False, True)] + self._chart[(qq,tt, False, False)]
 				if val > maxft:
 					maxft = val
 					self._chart[(ss,tt,False,True)] = val
 					self._pointer[(ss,tt,False,True)] = qq
+
 			for qq in xrange(tt,ss,-1):
 				val = self._chart[(ss,qq,True,False)] + self._chart[(qq,tt, True, True)]
 				if val > maxtt:
