@@ -145,25 +145,25 @@ class EisnerParser:
 
         return self._reconstruct((0, len(self._sent) - 1, True, True))
 
-    def _reconstruct(self, span):
-        """
+    def _reconstruct(self,span):
+	"""
         Return an iterater over edges in a cell in the parse chart
         """
-	result = set()
-       	""" add span1 of depth 1 """
-       	result.add((span[0],self._pointer[span])) 
-       	""" add span1/span1 of depth 2 """
-       	result.add((self._pointer[span],self._chart[(span[0],self._pointer[span], False, True)]))
-       	""" add span1/span2 of depth 2 """
-       	result.add((self._chart[(span[0],self._pointer[span], False, True)],self._chart[(span[0], self._chart[(span[0],self._pointer[span], False, True)], False, True)]))
-       	""" add span2/span1 of depth 2 """
-       	result.add((self._pointer[span],self._pointer[(self._pointer[span], span[1], True, True)]))
-       	""" add span2/span2 of depth 2 """
-       	result.add((self._pointer[(self._pointer[span], span[1], True, True)], span[1]))
-       	""" add last span """
-       	result.add((span[1], self._pointer[(self._pointer[span], span[1], False, True)]))
-    	
-        return result
+	yield (span[0], self._pointer[span])
+	""" break incomplete span """
+	ICSpanLength = self._pointer[span] - span[0]
+	if ICSpanLength == 3:
+		temp = self._pointer[span[0], self._pointer[span], False,span[3]]
+		yield (self._pointer[span], temp)
+		yield (temp, self._pointer[span[0], temp, span[2],span[3]])
+	""" Break complete span """
+	CSpanLength = span[1] - self._pointer[span]
+	if CSpanLength > 2:
+		for i in self._reconstruct((self._pointer[span], self._pointer[span] + CSpanLength, span[2],span[3])):
+			yield i
+	elif CSpanLength == 2:
+		yield (self._pointer[span], span[1])
+		yield (span[1],self._pointer[(self._pointer[span],span[1],  False, span[3])])
 
     def fill_chart(self):
         """
