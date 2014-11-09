@@ -455,7 +455,7 @@ if __name__ == "__main__":
     vocab_scanner = VocabBuilder(args.language)
 
     # Create a list of the files
-    search_path = "%s/*.txt" % args.doc_dir
+    search_path = u"%s/*.txt" % args.doc_dir
     files = glob(search_path)
     assert len(files) > 0, "Did not find any input files in %s" % search_path
     
@@ -470,5 +470,6 @@ if __name__ == "__main__":
     for ii in files:
         lda.add_doc(tokenize_file(ii), vocab)
 
-    lda.report_topics(vocab, args.output)
     lda.run_sampler(args.num_iterations)
+    lda.report_topics(vocab, args.output)
+
