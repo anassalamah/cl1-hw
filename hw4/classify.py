@@ -76,7 +76,8 @@ if __name__ == "__main__":
         else:
             dev_train.append((feat, ii['cat']))
         full_train.append((feat, ii['cat']))
-
+	
+    print dev_train[0]
     # Train a classifier
     print("Training classifier ...")
     classifier = nltk.classify.NaiveBayesClassifier.train(dev_train)
