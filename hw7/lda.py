@@ -294,6 +294,7 @@ class Sampler:
 
         if old_topic != -1:
             assert new_topic == -1
+<<<<<<< HEAD
             self._doc_counts[doc][index] -= 1
 
             # TODO: Add code here to keep track of the counts and
@@ -304,6 +305,17 @@ class Sampler:
 	    self._doc_counts[doc][index] += 1
             # TODO: Add code here to keep track of the counts and
             # assignments
+=======
+            self._doc_counts[doc].inc(old_topic,-1)
+            self._topics._topic_term[old_topic].inc(term,-1)
+        
+        
+        if new_topic != -1:
+            assert old_topic == -1
+            self._doc_counts[doc].inc(new_topic)
+            self._topics._topic_term[new_topic].inc(term)
+    	self._doc_assign[doc][index] = new_topic
+>>>>>>> a25a5f6ff7c6783f6ce35a4eee6f3866206847b7
 
     def run_sampler(self, iterations = 100):
         """
@@ -365,11 +377,26 @@ class Sampler:
         sample_probs = {}
         term = self._doc_tokens[doc_id][index]
         for kk in xrange(self._num_topics):
-
+	    docTopicNumerator = self._doc_counts[doc_id][kk] + self._alpha[kk]
+	    docTopicDenominator = sum(self._doc_counts[doc_id].values()) + sum(self._alpha)
+            docTopic = docTopicNumerator / float(docTopicDenominator)
+            print "docTopicNumerator: ", self._doc_counts[doc_id][kk],"+",self._alpha[kk]
+            print "docTopicDenominator: ", sum(self._doc_counts[doc_id]),"+",sum(self._alpha)
+	    print "docTopic", docTopic, docTopicNumerator,"/",docTopicDenominator
+	    
+	    topicWordNumerator = self._topics._topic_term[kk][term] + self._topics._default_beta
+	    topicWordDenominator = sum(self._topics._topic_term[kk].values()) + self._topics._beta_sum
+	    topicWord = topicWordNumerator / float(topicWordDenominator)
+	    print "topicWordNumerator: ", self._topics._topic_term[kk][term],"+",self._topics._default_beta
+	    print "topicWordDenominator: ", sum(self._topics._topic_term[kk].values()),"+",self._topics._beta_sum
+	    print "topicWord", topicWord, topicWordNumerator,"/",float(topicWordDenominator)
             # TODO: Compute the conditional probability of
             # sampling a topic; at the moment it's just the
             # uniform probability.
-            sample_probs[kk] = 1.0 / float(self._num_topics)
+            #sample_probs[kk] = 1.0 / float(self._num_topics)
+            
+            sample_probs[kk] = docTopic * topicWord
+            print "sample_probs[",kk,"]: ", sample_probs[kk]
 
         return sample_probs
         
