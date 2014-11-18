@@ -1,4 +1,6 @@
-#Anas Salamah
+# Author: Anas Salamah
+# Date: Oct 21, 2014
+
 from collections import defaultdict
 from random import random, randint
 from glob import glob
@@ -292,13 +294,14 @@ class Sampler:
 
         if old_topic != -1:
             assert new_topic == -1
-            
+            self._doc_counts[doc][index] -= 1
+
             # TODO: Add code here to keep track of the counts and
             # assignments
 
         if new_topic != -1:
             assert old_topic == -1
-
+	    self._doc_counts[doc][index] += 1
             # TODO: Add code here to keep track of the counts and
             # assignments
 
