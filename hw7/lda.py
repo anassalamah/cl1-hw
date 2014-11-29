@@ -1,4 +1,7 @@
-#Anas Salamah
+# Author: Anas Salamah
+# Date: Nov 14, 2014
+
+
 from collections import defaultdict
 from random import random, randint
 from glob import glob
@@ -365,23 +368,23 @@ class Sampler:
 	    docTopicNumerator = self._doc_counts[doc_id][kk] + self._alpha[kk]
 	    docTopicDenominator = sum(self._doc_counts[doc_id].values()) + sum(self._alpha)
             docTopic = docTopicNumerator / float(docTopicDenominator)
-            print "docTopicNumerator: ", self._doc_counts[doc_id][kk],"+",self._alpha[kk]
-            print "docTopicDenominator: ", sum(self._doc_counts[doc_id]),"+",sum(self._alpha)
-	    print "docTopic", docTopic, docTopicNumerator,"/",docTopicDenominator
+            #print "docTopicNumerator: ", self._doc_counts[doc_id][kk],"+",self._alpha[kk]
+            #print "docTopicDenominator: ", sum(self._doc_counts[doc_id]),"+",sum(self._alpha)
+	    #print "docTopic", docTopic, docTopicNumerator,"/",docTopicDenominator
 	    
 	    topicWordNumerator = self._topics._topic_term[kk][term] + self._topics._default_beta
 	    topicWordDenominator = sum(self._topics._topic_term[kk].values()) + self._topics._beta_sum
 	    topicWord = topicWordNumerator / float(topicWordDenominator)
-	    print "topicWordNumerator: ", self._topics._topic_term[kk][term],"+",self._topics._default_beta
-	    print "topicWordDenominator: ", sum(self._topics._topic_term[kk].values()),"+",self._topics._beta_sum
-	    print "topicWord", topicWord, topicWordNumerator,"/",float(topicWordDenominator)
+	    #print "topicWordNumerator: ", self._topics._topic_term[kk][term],"+",self._topics._default_beta
+	    #print "topicWordDenominator: ", sum(self._topics._topic_term[kk].values()),"+",self._topics._beta_sum
+	    #print "topicWord", topicWord, topicWordNumerator,"/",float(topicWordDenominator)
             # TODO: Compute the conditional probability of
             # sampling a topic; at the moment it's just the
             # uniform probability.
             #sample_probs[kk] = 1.0 / float(self._num_topics)
             
             sample_probs[kk] = docTopic * topicWord
-            print "sample_probs[",kk,"]: ", sample_probs[kk]
+            #print "sample_probs[",kk,"]: ", sample_probs[kk]
 
         return sample_probs
         
@@ -485,7 +488,7 @@ if __name__ == "__main__":
     lda = Sampler(args.num_topics, vocab)
     for ii in files:
         lda.add_doc(tokenize_file(ii), vocab)
-
+	lda.report_topics(vocab, args.output)
     lda.run_sampler(args.num_iterations)
-    lda.report_topics(vocab, args.output)
+    
 
